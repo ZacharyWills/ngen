@@ -19,12 +19,12 @@ jobs:
     - name: git submodule
       run: git submodule update --init --recursive 
     - name: cmake_init_build
-      run: cmake -D CMAKE_CXX_COMPILER=/usr/bin/gcc -B cmake_build-S .
+      run: cmake -D CMAKE_CXX_COMPILER=/usr/bin/g++ -B cmake_build-S .
     - name: build_tests
       run: cmake --build cmake_build-S --target test_all
       timeout-minutes: 15    
     - name: run tests
-      run: ./cmake_build/test/test_all
+      run: ./cmake_build-S/test/test_all
       timeout-minutes: 15
     #- name: make check
     #  run: make check

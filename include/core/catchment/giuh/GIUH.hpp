@@ -6,10 +6,7 @@
 #include <utility>
 #include <vector>
 #include <memory>
-<<<<<<< HEAD
-=======
 
->>>>>>> upstream/master
 namespace giuh {
 
     struct giuh_carry_over {
@@ -32,12 +29,51 @@ namespace giuh {
 
     public:
 
+        /**
+         * Factory create a ``giuh_kernel_impl`` object, deriving CDF times and frequencies from a regularized
+         * interpolation interval value and a collection of incremental runoff values.
+         *
+         * The function essentially transforms the provided runoff values vector into a CDF vector setting each ``i``-th
+         * ordinate to the ``i``-th incremental value plus the ``(i-1)``-th ordinate value.  A corresponding vector of
+         * times is also created, with each value being ``interpolation_regularity_seconds`` larger than the previous
+         * (starting at ``0``).  These are then used in a call to the ``giuh_kernel_impl`` constructor, with the
+         * resulting object returned.
+         *
+         * @param catchment_id
+         * @param comid
+         * @param interpolation_regularity_seconds
+         * @param incremental_runoffs
+         * @return
+         */
+        static giuh_kernel_impl make_from_incremental_runoffs(std::string catchment_id,
+                                                              std::string comid,
+                                                              int interpolation_regularity_seconds,
+                                                              std::vector<double> incremental_runoffs)
+        {
+            std::vector<double> ordinates(incremental_runoffs.size() + 1);
+            std::vector<double> ordinate_times(incremental_runoffs.size() + 1);
+
+            double ordinate_sum = 0.0;
+            int time_sum = 0;
+            ordinates.push_back(ordinate_sum);
+            ordinate_times.push_back(time_sum);
+            for (unsigned int i = 1; i < ordinates.size(); ++i) {
+                ordinate_sum += incremental_runoffs[i-1];
+                ordinates[i] = ordinate_sum;
+                time_sum += interpolation_regularity_seconds;
+                ordinate_times[i] = time_sum;
+            }
+
+            return giuh_kernel_impl(catchment_id, comid, ordinate_times, ordinates, interpolation_regularity_seconds);
+        }
+
         giuh_kernel_impl(
                 std::string catchment_id,
                 std::string comid,
                 std::vector<double> cdf_times,
-                std::vector<double> cdf_cumulative_freqs
-                ) : giuh_kernel(std::move(catchment_id), std::move(comid))
+                std::vector<double> cdf_cumulative_freqs,
+                unsigned int interpolation_regularity_seconds
+                ) : giuh_kernel(std::move(catchment_id), std::move(comid), interpolation_regularity_seconds)
         {
             this->cdf_times = std::move(cdf_times);
             // TODO: might be able to get this by calculating from times, rather than being passed
@@ -47,6 +83,15 @@ namespace giuh {
 
             // TODO: have this be called by constructor, but consider later handling this concurrently
             interpolate_regularized_cdf();
+        }
+
+        giuh_kernel_impl(
+                std::string catchment_id,
+                std::string comid,
+                std::vector<double> cdf_times,
+                std::vector<double> cdf_cumulative_freqs
+        ) : giuh_kernel_impl(std::move(catchment_id), std::move(comid), cdf_times, cdf_cumulative_freqs, 60) {
+
         }
 
         /**

@@ -1,7 +1,9 @@
 #include <vector>
 #include "gtest/gtest.h"
 #include "Forcing.h"
+#include "FileChecker.h"
 #include <memory>
+#include <vector>
 #include <string>
 #include <unistd.h>
 #include <stdio.h>
@@ -55,7 +57,9 @@ void ForcingTest::TearDown() {
 //Construct a forcing object
 void ForcingTest::setupForcing()
 {
-    string forcing_file_name = "../test/forcing/Sample_Tropical_Hourly_Rainfall.csv";
+    std::vector<std::string> forcing_file_names = { "../test/forcing/Sample_Tropical_Hourly_Rainfall.csv",
+                                                    "test/forcing/Sample_Tropical_Hourly_Rainfall.csv" };
+    std::string forcing_file_name = utils::FileChecker::find_first_readable(forcing_file_names);
 
     start_date_time = std::make_shared<time_type>();
 
@@ -78,23 +82,16 @@ void ForcingTest::setupForcing()
 //Construct a forcing object AORC
 void ForcingTest::setupForcing_AORC()
 {
-    string forcing_file_name_AORC = "../test/forcing/cat-10_2015-12-01 00_00_00_2015-12-30 23_00_00.csv";
+    std::vector<std::string> forcing_file_names_AORC = {
+            "../test/forcing/cat-10_2015-12-01 00_00_00_2015-12-30 23_00_00.csv",
+            "test/forcing/cat-10_2015-12-01 00_00_00_2015-12-30 23_00_00.csv"
+    };
 
-    start_date_time_AORC = std::make_shared<time_type>();
+    std::string forcing_file_name_AORC = utils::FileChecker::find_first_readable(forcing_file_names_AORC);
 
-    start_date_time_AORC->tm_year = 115;
-    start_date_time_AORC->tm_mon = 11;
-    start_date_time_AORC->tm_mday = 14;
-    start_date_time_AORC->tm_hour = 15;
+    forcing_params forcing_p(forcing_file_name_AORC, "2015-12-14 21:00:00", "2015-12-30 23:00:00");
 
-    end_date_time_AORC = std::make_shared<time_type>();
-
-    end_date_time_AORC->tm_year = 115;
-    end_date_time_AORC->tm_mon = 11;
-    end_date_time_AORC->tm_mday = 31;
-    end_date_time_AORC->tm_hour = 10;
-
-    Forcing_Object_AORC = std::make_shared<Forcing>(0.0, 0, forcing_file_name_AORC, start_date_time_AORC, end_date_time_AORC);
+    Forcing_Object_AORC = std::make_shared<Forcing>(forcing_p);
 }
 
 /*Original Forcing Object Test
@@ -102,12 +99,12 @@ void ForcingTest::setupForcing_AORC()
 TEST_F(ForcingTest, TestForcingDataRead)
 {
    double current_precipitation;
-   int current_day_of_year;   
+   int current_day_of_year;
    for (int i = 0; i < 76; i++)
    {
       current_precipitation = Forcing_Object1->get_next_hourly_precipitation_meters_per_second();
    }
-    
+
    double last_precipitation_rounded = round(current_precipitation * 1000.0) / 1000.0;
    double compare_precipitation_rounded = round(3.24556e-06 * 1000.0) / 1000.0;
    EXPECT_DOUBLE_EQ(compare_precipitation_rounded, last_precipitation_rounded);
@@ -121,13 +118,12 @@ TEST_F(ForcingTest, TestForcingDataRead)
 {
    double current_precipitation;
 
-   int current_day_of_year;   
-
+   int current_day_of_year;
    for (int i = 0; i < 66; i++)
    {
       current_precipitation = Forcing_Object_AORC->get_next_hourly_precipitation_meters_per_second();
    }
-    
+
    double last_precipitation_rounded = round(current_precipitation * 10000000.0) / 10000000.0;
 
    double compare_precipitation_rounded = round(7.9999999999999996e-07 * 10000000.0) / 10000000.0;
@@ -160,7 +156,7 @@ TEST_F(ForcingTest, TestForcingDataRead)
    {
       current_precipitation = Forcing_Object_AORC->get_next_hourly_precipitation_meters_per_second();
    }
-    
+
    last_precipitation_rounded = round(current_precipitation * 10000000.0) / 10000000.0;
 
    compare_precipitation_rounded = round(6.9999999999999996e-07 * 10000000.0) / 10000000.0;

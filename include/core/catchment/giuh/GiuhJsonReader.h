@@ -1,13 +1,16 @@
 #ifndef NGEN_GIUHJSONREADER_H
 #define NGEN_GIUHJSONREADER_H
 
+#include "all.h"
 #include "GIUH.hpp"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <map>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
+#include <map>
 
 namespace giuh {
 

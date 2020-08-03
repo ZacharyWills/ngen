@@ -20,6 +20,7 @@ macro(add_automated_test TESTNAME)
             NGen::core_nexus
             NGen::geojson
             NGen::models_tshirt
+            NGen::kernels_reservoir
             NGen::realizations_catchment)
     gtest_discover_tests(${TESTNAME}
             WORKING_DIRECTORY ${PROJECT_DIR}
@@ -42,6 +43,7 @@ macro(add_automated_test_w_mock TESTNAME)
             NGen::geojson
             NGen::models_tshirt
             NGen::realizations_catchment
+            NGen::kernels_reservoir
             )
     gtest_discover_tests(${TESTNAME}
             WORKING_DIRECTORY ${PROJECT_DIR}
@@ -54,11 +56,22 @@ endmacro()
 add_automated_test(test_hymod models/hymod/include/HymodTest.cpp)
 
 add_automated_test(
+        test_tshirt
+        models/tshirt/include/TshirtTest.cpp
+)
+
+add_automated_test(
     test_geojson
     geojson/JSONProperty_Test.cpp
     geojson/JSONGeometry_Test.cpp
     geojson/Feature_Test.cpp
     geojson/FeatureCollection_Test.cpp
+)
+
+add_automated_test(
+    test_realization_config
+    realizations/catchments/Realization_Config_Test.cpp
+    realizations/catchments/Realization_Config_Reader_Test.cpp
 )
 
 add_automated_test(
@@ -71,7 +84,7 @@ add_automated_test(
 add_automated_test(
         test_unit
         models/hymod/include/HymodTest.cpp
-        models/hymod/include/Nonlinear_Reservoir_Test.cpp
+        models/hymod/include/Reservoir_Test.cpp
         models/tshirt/include/TshirtTest.cpp
         geojson/JSONProperty_Test.cpp
         geojson/JSONGeometry_Test.cpp
@@ -79,6 +92,8 @@ add_automated_test(
         geojson/FeatureCollection_Test.cpp
         forcing/Forcing_Test.cpp
         core/catchment/giuh/GIUH_Test.cpp
+        realizations/catchments/Realization_Config_Test.cpp
+        realizations/catchments/Realization_Config_Reader_Test.cpp
 )
 
 # Add for integration tests once we have some
@@ -88,7 +103,7 @@ add_automated_test(
 add_automated_test_w_mock(
         test_all
         models/hymod/include/HymodTest.cpp
-        models/hymod/include/Nonlinear_Reservoir_Test.cpp
+        models/hymod/include/Reservoir_Test.cpp
         models/tshirt/include/TshirtTest.cpp
         geojson/JSONProperty_Test.cpp
         geojson/JSONGeometry_Test.cpp
@@ -96,4 +111,6 @@ add_automated_test_w_mock(
         geojson/FeatureCollection_Test.cpp
         forcing/Forcing_Test.cpp
         core/catchment/giuh/GIUH_Test.cpp
+        realizations/catchments/Realization_Config_Test.cpp
+        realizations/catchments/Realization_Config_Reader_Test.cpp
 )

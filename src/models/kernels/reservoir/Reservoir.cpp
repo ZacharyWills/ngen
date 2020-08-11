@@ -95,9 +95,14 @@ Reservoir::Reservoir(double minimum_storage_meters, double maximum_storage_meter
  * @brief Function to update the reservoir storage in meters and return a response in meters per second to
  * an influx and time step.
  *
+ * Note that the function also takes a reference parameter for holding the amount of excess water for the reservoir
+ * beyond its maximum storage after accounting for the input amount.  All calls to this function will initialize this
+ * parameter, without accounting for any previous value, so any usage should ensure the passed reference does not
+ * contain a value that is still needed but not stored elsewhere.
+ *
  * @param in_flux_meters_per_second influx in meters per second
  * @param delta_time_seconds delta time in seconds
- * @param excess_water_meters excess water in meters
+ * @param excess_water_meters Reference to an amount of excess water in meters, after considering input and max storage.
  * @return sum_of_outlet_velocities_meters_per_second sum of the outlet velocities in meters per second
  */
 double Reservoir::response_meters_per_second(double in_flux_meters_per_second, int delta_time_seconds,
@@ -105,6 +110,7 @@ double Reservoir::response_meters_per_second(double in_flux_meters_per_second, i
 {
     double outlet_velocity_meters_per_second = 0;
     double sum_of_outlet_velocities_meters_per_second = 0;
+    excess_water_meters = 0;
 
     //Update current storage from influx multiplied by delta time.
     state.current_storage_height_meters += in_flux_meters_per_second * delta_time_seconds;
@@ -143,14 +149,11 @@ double Reservoir::response_meters_per_second(double in_flux_meters_per_second, i
     }
 
     //If storage is greater than maximum storage, set to maximum storage and return excess water.
-    if (state.current_storage_height_meters > parameters.maximum_storage_meters)
-    {
+    if (state.current_storage_height_meters > parameters.maximum_storage_meters) {
         /// \todo TODO: Return appropriate warning
         cout << "WARNING: Reservoir calculated a storage above the maximum storage."  << endl;
-
+        excess_water_meters = state.current_storage_height_meters - parameters.maximum_storage_meters;
         state.current_storage_height_meters = parameters.maximum_storage_meters;
-
-        excess_water_meters = (state.current_storage_height_meters - parameters.maximum_storage_meters);
     }
 
     //Ensure that excess_water_meters is not negative
@@ -161,7 +164,7 @@ double Reservoir::response_meters_per_second(double in_flux_meters_per_second, i
             << "ERROR: excess_water_meters from the reservoir is calculated to be less than zero."
             << endl;
     }
- 
+
     return sum_of_outlet_velocities_meters_per_second;
 }
 

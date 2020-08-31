@@ -62,7 +62,7 @@ else()
     endif()
 endif()
 
-find_package(Boost 1.69.0 REQUIRED)
+find_package(Boost 1.72.0 REQUIRED)
 
 target_include_directories(ngen PUBLIC
         "${PROJECT_BINARY_DIR}/include" # For generated config header file in binary tree
@@ -71,6 +71,7 @@ target_include_directories(ngen PUBLIC
 add_subdirectory("src/core")
 add_subdirectory("src/geojson")
 add_subdirectory("src/realizations/catchment")
+
 add_subdirectory("src/models/tshirt")
 add_subdirectory("src/models/kernels/reservoir")
 #add_subdirectory("src/forcing")
@@ -84,6 +85,7 @@ target_link_libraries(ngen PUBLIC
         NGen::models_tshirt
         NGen::realizations_catchment
         NGen::kernels_reservoir
+        #NGen::kernels_reservoir_timeless
         #NGen::forcing
         )
 

@@ -369,7 +369,12 @@ namespace geojson {
         }
     }
 
-    static GeoJSON build_collection(const boost::property_tree::ptree tree) {
+    /**
+     * @brief helper function to build a GeoJSON FeatureCollection from a property tree
+     * @param tree boost::property_tree::ptree holding the parsed GeoJSON
+     * @param ids optional subset of string feature ids, only features in tree with these ids will be in the collection
+     */
+    static GeoJSON build_collection(const boost::property_tree::ptree tree, const std::vector<std::string> ids={}) {
         std::vector<double> bbox_values;
         std::vector<Feature> features;
         PropertyMap foreign_members;
@@ -391,7 +396,13 @@ namespace geojson {
                 if (e) {
                     for(auto feature_tree : *e) {
                         Feature feature = build_feature(feature_tree.second);
-                        features.push_back(feature);
+                        if( ids.empty() || std::find(ids.begin(), ids.end(), feature->get_id()) != ids.end() ) {
+                          //ids is empty, meaning we want all features,
+                          //or feature id was found in the provided ids vector
+                          //so hold the feature to add to collection later
+
+                          features.push_back(feature);
+                        }
                     }
                 }
                 else {
@@ -414,17 +425,19 @@ namespace geojson {
         return collection;
     }
 
-    static GeoJSON read(const std::string &file_path) {
+    static GeoJSON read(const std::string &file_path, const std::vector<std::string> &ids = {}) {
         boost::property_tree::ptree tree;
         boost::property_tree::json_parser::read_json(file_path, tree);
-        return build_collection(tree);
+        return build_collection(tree, ids);
     }
 
-    static GeoJSON read(std::stringstream &data) {
+    static GeoJSON read(std::stringstream &data, const std::vector<std::string> &ids = {}) {
         boost::property_tree::ptree tree;
         boost::property_tree::json_parser::read_json(data, tree);
-        return build_collection(tree);
+        return build_collection(tree, ids);
     }
+
+
 }
 
 #endif // GEOJSON_FEATURE_BUILDER_H

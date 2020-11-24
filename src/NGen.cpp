@@ -29,6 +29,7 @@ class RealizaitonVisitor : public geojson::FeatureVisitor {
 
 };
 
+// TODO: Avoid having to call this in favor of having this being a core part of the creation of both the initial collections
 void prepare_features(geojson::GeoJSON& nexus, geojson::GeoJSON& catchments, bool validate=false)
 {
   for(auto& feature: *nexus){
@@ -159,12 +160,17 @@ int main(int argc, char *argv[]) {
 
     //Read the collection of nexus
     std::cout << "Building Nexus collection" << std::endl;
+
+    // TODO: Instead of iterating through a collection of FeatureBase objects mapping to nexi, we instead want to iterate through HY_HydroLocation objects
     geojson::GeoJSON nexus_collection = geojson::read(nexusDataFile, nexus_subset_ids);
     std::cout << "Building Catchment collection" << std::endl;
+
+    // TODO: Instead of iterating through a collection of FeatureBase objects mapping to catchments, we instead want to iterate through HY_Catchment objects
     geojson::GeoJSON catchment_collection = geojson::read(catchmentDataFile, catchment_subset_ids);
 
     prepare_features(nexus_collection, catchment_collection, !true);
 
+    // TODO: Have these formulations attached to the prior HY_Catchment objects
     realization::Formulation_Manager manager = realization::Formulation_Manager(REALIZATION_CONFIG_PATH);
     manager.read(catchment_collection, utils::getStdOut());
 
@@ -238,7 +244,7 @@ int main(int argc, char *argv[]) {
             catchment_outfiles[formulation_pair.first] << "Time Step," << "Time," << header_str <<std::endl;
         }
         std::string output_str = formulation_pair.second->get_output_line_for_timestep(output_time_index);
-        catchment_outfiles[formulation_pair.first] << time_step << "," << current_timestamp << "," << output_str << std::endl;
+        catchment_outfiles[formulation_pair.first] << output_time_index << "," << current_timestamp << "," << output_str << std::endl;
         response = response * boost::geometry::area(nexus_collection->get_feature(formulation_pair.first)->geometry<geojson::multipolygon_t>());
         std::cout << "\t\tThe modified response is: " << response << std::endl;
         //update the nexus with this flow

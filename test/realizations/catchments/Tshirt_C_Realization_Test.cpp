@@ -249,7 +249,7 @@ TEST_F(Tshirt_C_Realization_Test, TestRun0) {
             params,
             nash_storage);
 
-    int result = tshirt_c_real.run_formulation_for_timestep(0.0);
+    int result = tshirt_c_real.run_formulation_for_timestep(0.0, 3600);
 
     // TODO: figure out how to test for bogus/mismatched nash_n and state nash vector size (without silent error)
 
@@ -298,13 +298,13 @@ TEST_F(Tshirt_C_Realization_Test, TestGetOutputLineForTimestep1a) {
         Tokenizer tokenizer(line);
         result_vector.assign(tokenizer.begin(), tokenizer.end());
 
-        double input_storage = std::stod(result_vector[1]) / 1000;
+        double input_storage = std::stod(result_vector[1]) / 1000 / 3600;
 
         // Output the line essentially
         //copy(result_vector.begin(), result_vector.end(), ostream_iterator<string>(cout, "|"));
         //cout << "\n";
 
-        tshirt_c_real.run_formulation_for_timestep(input_storage);
+        tshirt_c_real.run_formulation_for_timestep(input_storage, 3600);
         timestep++;
     }
 
@@ -357,14 +357,112 @@ TEST_F(Tshirt_C_Realization_Test, TestGetOutputLineForTimestep1b) {
         Tokenizer tokenizer(line);
         result_vector.assign(tokenizer.begin(), tokenizer.end());
         double input_storage = std::stod(result_vector[1]) / 1000;
-        tshirt_c_real.run_formulation_for_timestep(input_storage);
+        tshirt_c_real.run_formulation_for_timestep(input_storage, 3600);
         timestep++;
     }
 
     std::string actual_last = tshirt_c_real.get_output_line_for_timestep(timestep - 1);
     std::string outside_bounds = tshirt_c_real.get_output_line_for_timestep(timestep);
 
-    EXPECT_EQ(actual_last, "0.000000,0.000000,0.000000,0.000003,0.000233,0.000236");
+    EXPECT_EQ(actual_last, "0.000000,0.000000,0.000000,0.000049,0.000336,0.000385");
+    ASSERT_EQ(outside_bounds, "");
+}
+
+/**
+ * Test function for getting values for time step in formatted output string, for first and last time step, when reading
+ * from forcing data.
+ */
+TEST_F(Tshirt_C_Realization_Test, TestGetOutputLineForTimestep2a) {
+    int example_index = 0;
+
+    open_standalone_c_impl_data_stream();
+
+    setup_standalone_c_impl_example_case();
+
+    // init gw res as half full for test
+    double gw_storage_ratio = 0.5;
+
+    // init soil reservoir as 2/3 full
+    double soil_storage_ratio = 0.667;
+
+    std::vector<double> nash_storage(c_impl_ex_tshirt_params->nash_n);
+    for (int i = 0; i < c_impl_ex_tshirt_params->nash_n; i++) {
+        nash_storage[i] = 0.0;
+    }
+
+    std::vector<double> giuh_ordinates = giuh_ordinate_examples[example_index];
+
+    realization::Tshirt_C_Realization tshirt_c_real(
+            forcing_params_examples[example_index],
+            utils::StreamHandler(),
+            soil_storage_ratio,
+            gw_storage_ratio,
+            true,
+            "wat-88",
+            giuh_ordinates,
+            *c_impl_ex_tshirt_params,
+            nash_storage);
+
+    std::vector<std::string> result_vector;
+    string line;
+
+    for (int timestep = 0; timestep < 5; ++timestep) {
+        tshirt_c_real.get_response(timestep, 3600);
+    }
+
+    std::string actual_first = tshirt_c_real.get_output_line_for_timestep(0);
+    std::string actual_last = tshirt_c_real.get_output_line_for_timestep(4);
+
+    EXPECT_EQ(actual_first, "0.000000,0.000000,0.000000,0.000000,0.191086,0.191086");
+    ASSERT_EQ(actual_last, "0.000000,0.000000,0.000000,0.000242,0.145356,0.145598");
+}
+
+/**
+ * Test function for getting values for time step in formatted output string handles out-of-bounds case as expected,
+ * when reading from forcing data.
+ */
+TEST_F(Tshirt_C_Realization_Test, TestGetOutputLineForTimestep2b) {
+    int example_index = 0;
+
+    open_standalone_c_impl_data_stream();
+
+    setup_standalone_c_impl_example_case();
+
+    // init gw res as half full for test
+    double gw_storage_ratio = 0.5;
+
+    // init soil reservoir as 2/3 full
+    double soil_storage_ratio = 0.667;
+
+    std::vector<double> nash_storage(c_impl_ex_tshirt_params->nash_n);
+    for (int i = 0; i < c_impl_ex_tshirt_params->nash_n; i++) {
+        nash_storage[i] = 0.0;
+    }
+
+    std::vector<double> giuh_ordinates = giuh_ordinate_examples[example_index];
+
+    realization::Tshirt_C_Realization tshirt_c_real(
+            forcing_params_examples[example_index],
+            utils::StreamHandler(),
+            soil_storage_ratio,
+            gw_storage_ratio,
+            true,
+            "wat-88",
+            giuh_ordinates,
+            *c_impl_ex_tshirt_params,
+            nash_storage);
+
+    std::vector<std::string> result_vector;
+    string line;
+
+    for (int timestep = 0; timestep < 5; ++timestep) {
+        tshirt_c_real.get_response(timestep, 3600);
+    }
+
+    std::string actual_last = tshirt_c_real.get_output_line_for_timestep(4);
+    std::string outside_bounds = tshirt_c_real.get_output_line_for_timestep(5);
+
+    EXPECT_EQ(actual_last, "0.000000,0.000000,0.000000,0.000242,0.145356,0.145598");
     ASSERT_EQ(outside_bounds, "");
 }
 
@@ -522,7 +620,7 @@ TEST_F(Tshirt_C_Realization_Test, TestGetValue1a) {
         Tokenizer tokenizer(line);
         result_vector.assign(tokenizer.begin(), tokenizer.end());
         double input_storage = std::stod(result_vector[1]);
-        tshirt_c_real.run_formulation_for_timestep(input_storage);
+        tshirt_c_real.run_formulation_for_timestep(input_storage, 3600);
         values_vector.emplace_back(tshirt_c_real.get_latest_flux_surface_runoff());
     }
 
@@ -569,7 +667,7 @@ TEST_F(Tshirt_C_Realization_Test, TestGetValue1b) {
         Tokenizer tokenizer(line);
         result_vector.assign(tokenizer.begin(), tokenizer.end());
         double input_storage = std::stod(result_vector[1]);
-        tshirt_c_real.run_formulation_for_timestep(input_storage);
+        tshirt_c_real.run_formulation_for_timestep(input_storage, 3600);
         values_vector.emplace_back(tshirt_c_real.get_latest_flux_total_discharge());
     }
 
@@ -620,8 +718,10 @@ TEST_F(Tshirt_C_Realization_Test, TestSurfaceRunoffCalc1a) {
         // variable to convert them into cubic meters per time step.
         //input_storage *= c_impl_ex_catchment_area_km2;
 
-        // The run function now expects inputs in meters per timestep
+        // However, the data starts in mm/h, so first convert mm to m ...
         input_storage /= 1000;
+        // ... then convert m / h to m / s
+        input_storage /= 3600;
 
         // runoff is index 2
         double expected = std::stod(result_vector[2]);
@@ -633,7 +733,7 @@ TEST_F(Tshirt_C_Realization_Test, TestSurfaceRunoffCalc1a) {
         copy(result_vector.begin(), result_vector.end(), ostream_iterator<string>(cout, "|"));
         cout << "\n";
 
-        tshirt_c_real.run_formulation_for_timestep(input_storage);
+        tshirt_c_real.run_formulation_for_timestep(input_storage, 3600);
 
         double actual = tshirt_c_real.get_latest_flux_surface_runoff();
 
@@ -696,8 +796,10 @@ TEST_F(Tshirt_C_Realization_Test, TestGiuhRunoffCalc1a) {
         // variable to convert them into cubic meters per time step.
         //input_storage *= c_impl_ex_catchment_area_km2;
 
-        // The run function now expects inputs in meters per timestep
+        // However, the data starts in mm/h, so first convert mm to m ...
         input_storage /= 1000;
+        // ... then convert m / h to m / s
+        input_storage /= 3600;
 
         // giuh runoff is index 3
         double expected = std::stod(result_vector[3]);
@@ -709,7 +811,7 @@ TEST_F(Tshirt_C_Realization_Test, TestGiuhRunoffCalc1a) {
         copy(result_vector.begin(), result_vector.end(), ostream_iterator<string>(cout, "|"));
         cout << "\n";
 
-        tshirt_c_real.run_formulation_for_timestep(input_storage);
+        tshirt_c_real.run_formulation_for_timestep(input_storage, 3600);
         double actual = tshirt_c_real.get_latest_flux_giuh_runoff();
 
         // Note that, for non-zero values, having to work within a reasonable upper and lower bounds to allow for
@@ -784,8 +886,10 @@ TEST_F(Tshirt_C_Realization_Test, TestLateralFlowCalc1a) {
         // variable to convert them into cubic meters per time step.
         //input_storage *= c_impl_ex_catchment_area_km2;
 
-        // The run function now expects inputs in meters per timestep
+        // However, the data starts in mm/h, so first convert mm to m ...
         input_storage /= 1000;
+        // ... then convert m / h to m / s
+        input_storage /= 3600;
 
         // lateral flow is index 4
         double expected = std::stod(result_vector[4]);
@@ -797,7 +901,7 @@ TEST_F(Tshirt_C_Realization_Test, TestLateralFlowCalc1a) {
         copy(result_vector.begin(), result_vector.end(), ostream_iterator<string>(cout, "|"));
         cout << "\n";
 
-        tshirt_c_real.run_formulation_for_timestep(input_storage);
+        tshirt_c_real.run_formulation_for_timestep(input_storage, 3600);
         double actual = tshirt_c_real.get_latest_flux_lateral_flow();
 
         // Note that, for non-zero values, having to work within a reasonable upper and lower bounds to allow for
@@ -861,8 +965,10 @@ TEST_F(Tshirt_C_Realization_Test, TestBaseFlowCalc1a) {
         // variable to convert them into cubic meters per time step.
         //input_storage *= c_impl_ex_catchment_area_km2;
 
-        // The run function now expects inputs in meters per timestep
+        // However, the data starts in mm/h, so first convert mm to m ...
         input_storage /= 1000;
+        // ... then convert m / h to m / s
+        input_storage /= 3600;
 
         // base flow is index 5
         double expected = std::stod(result_vector[5]);
@@ -874,7 +980,7 @@ TEST_F(Tshirt_C_Realization_Test, TestBaseFlowCalc1a) {
         copy(result_vector.begin(), result_vector.end(), ostream_iterator<string>(cout, "|"));
         cout << "\n";
 
-        tshirt_c_real.run_formulation_for_timestep(input_storage);
+        tshirt_c_real.run_formulation_for_timestep(input_storage, 3600);
         double actual = tshirt_c_real.get_latest_flux_base_flow();
 
         // Note that, for non-zero values, having to work within a reasonable upper and lower bounds to allow for
@@ -938,8 +1044,10 @@ TEST_F(Tshirt_C_Realization_Test, TestTotalDischargeOutputCalc1a) {
         // variable to convert them into cubic meters per time step.
         //input_storage *= c_impl_ex_catchment_area_km2;
 
-        // The run function now expects inputs in meters per timestep
+        // However, the data starts in mm/h, so first convert mm to m ...
         input_storage /= 1000;
+        // ... then convert m / h to m / s
+        input_storage /= 3600;
 
         // output is index 5
         double expected = std::stod(result_vector[6]);
@@ -951,7 +1059,7 @@ TEST_F(Tshirt_C_Realization_Test, TestTotalDischargeOutputCalc1a) {
         copy(result_vector.begin(), result_vector.end(), ostream_iterator<string>(cout, "|"));
         cout << "\n";
 
-        tshirt_c_real.run_formulation_for_timestep(input_storage);
+        tshirt_c_real.run_formulation_for_timestep(input_storage, 3600);
         double actual = tshirt_c_real.get_latest_flux_total_discharge();
 
         // Note that, for non-zero values, having to work within a reasonable upper and lower bounds to allow for

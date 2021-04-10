@@ -4,6 +4,14 @@ add_subdirectory(googletest)
 include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 include_directories(${PROJ_ROOT_INCLUDE_DIR})
 
+if(MPI_ACTIVE)
+    add_compile_definitions(NGEN_MPI_TESTS_ACTIVE)
+endif()
+
+if(BMI_C_LIB_ACTIVE)
+    add_compile_definitions(NGEN_BMI_C_LIB_TESTS_ACTIVE)
+endif()
+
 # Add test source files (e.g., test1.cpp)
 #add_executable(test_hymod models/hymod/include/HymodTest.cpp)
 #target_link_libraries(test_hymod gtest gtest_main)
@@ -77,6 +85,27 @@ add_automated_test(
 add_automated_test(
         test_giuh
         core/catchment/giuh/GIUH_Test.cpp
+)
+
+
+if(MPI_ACTIVE)
+   add_automated_test(
+           test_remote_nexus
+           core/nexus/NexusRemoteTests.cpp
+   )
+endif()
+
+
+add_automated_test(
+        test_bmi_c
+        realizations/catchments/Bmi_C_Adapter_Test.cpp
+        realizations/catchments/Bmi_C_Formulation_Test.cpp
+)
+
+add_automated_test(
+        compare_cfe
+        # TODO: this probably needs to be added to integration testing also
+        realizations/catchments/Bmi_C_Cfe_IT.cpp
 )
 
 # Unit tests

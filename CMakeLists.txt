@@ -1,4 +1,9 @@
 cmake_minimum_required(VERSION 3.10)
+
+if(MPI_ACTIVE)
+   set (CMAKE_CXX_COMPILER "mpicxx")
+endif()
+
 ########### Define project version and use via generated config header
 project(ngen VERSION 0.1.0)
 configure_file(include/NGenConfig.h.in include/NGenConfig.h)
@@ -62,11 +67,29 @@ else()
     endif()
 endif()
 
+if(MPI_ACTIVE)
+    find_package(MPI)
+    add_compile_definitions(NGEN_MPI_ACTIVE)
+endif()
+
 find_package(Boost 1.72.0 REQUIRED)
+
+# Handle several steps for BMI C library logic and dependencies, at top level, if functionality is turned on
+if(BMI_C_LIB_ACTIVE)
+    # Define associated preprocessor directive
+    add_compile_definitions(NGEN_BMI_C_LIB_ACTIVE)
+endif()
 
 target_include_directories(ngen PUBLIC
         "${PROJECT_BINARY_DIR}/include" # For generated config header file in binary tree
         )
+
+# In some IDEs (e.g., CLion), it is easier to work with the code in the included example of an "external" shared library
+# when that code appears to be part of the main project, which can be done by uncommenting the statement below.
+#
+# However, this should be commented out when running CMake builds and in the committed version of this file.
+#
+#add_subdirectory("extern/cfe")
 
 add_subdirectory("src/core")
 add_subdirectory("src/geojson")

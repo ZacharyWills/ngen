@@ -591,6 +591,8 @@ void Tshirt_C_Realization::init_soil_reservoir(double storage, bool storage_valu
     // suction pressure = 1/3 atm= field_capacity_atm_press_fraction * atm_press_Pa.
 
     // equation 3 from NWM/t-shirt parameter equivalence document
+    // This may need to be changed as follows later, but for now, use the constant value
+    //double H_water_table_m = params->alpha_fc * forcing.get_AORC_PRES_surface_Pa() / WATER_SPECIFIC_WEIGHT;
     double H_water_table_m = params->alpha_fc * STANDARD_ATMOSPHERIC_PRESSURE_PASCALS / WATER_SPECIFIC_WEIGHT;
 
 

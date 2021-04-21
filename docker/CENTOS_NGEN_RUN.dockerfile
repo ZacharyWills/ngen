@@ -9,7 +9,7 @@ COPY ./* /ngen/
 WORKDIR /ngen
 
 ENV CXX=/usr/bin/g++
-
+RUN pwd && ls -la
 RUN git submodule update --init --recursive -- test/googletest
 
 RUN curl -L -O https://dl.bintray.com/boostorg/release/1.72.0/source/boost_1_72_0.tar.bz2

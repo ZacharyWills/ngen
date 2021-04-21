@@ -39,6 +39,8 @@ jobs:
 
       - name: Build nGen
         run: cmake -B /ngen -S .
+      
+      - name: Build 2  
         run: cmake --build /ngen --target ngen
       
       - name: Build the NGEN image

@@ -15,7 +15,7 @@ jobs:
       steps:
       - name: Checkout the code
         uses: actions/checkout@v2
-        name: PWD
+      - name: PWD
         run: pwd && git status
       - name: Build the NGEN image
         run: docker build . --file ./docker/CENTOS_NGEN_RUN.dockerfile --tag localbuild/ngen:latest      

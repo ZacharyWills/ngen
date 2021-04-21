@@ -1,4 +1,4 @@
-FROM centos:8 as builder
+FROM centos:latest as builder
 
 RUN yum update -y
 RUN yum install -y tar git gcc-c++ gcc make cmake python3 bzip2

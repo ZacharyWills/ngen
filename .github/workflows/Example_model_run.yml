@@ -1,7 +1,7 @@
 name: Build and Run NGEN on example data
 
 on:
-  workflow_dispatch
+  workflow_dispatch:
     inputs:
       version:
         description: Bump Test Version

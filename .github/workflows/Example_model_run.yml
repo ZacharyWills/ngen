@@ -15,7 +15,7 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@v2
       - name: Checkout the code
-        run: rm -rf .dockerignore
+        run: ls -l && pwd && rm -rf .dockerignore
       - name: Build the NGEN image
         run: docker build . --file ./docker/CENTOS_NGEN_RUN.dockerfile --tag localbuild/ngen:latest      
       - name: Run the NGEN model on example data

@@ -5,55 +5,19 @@ on:
     inputs:
       version:
         description: Bump Test Version
-        default: v1.0.0
         required: false
   pull_request:
     branches: [ master ]
 jobs:
     Build_and_Run_Model:
       runs-on: ubuntu-latest
-      env:
-        CXX: /usr/bin/g++
-        BOOST_ROOT: boost_1_72_0
-
       steps:
       - name: Checkout the code
         uses: actions/checkout@v2
-      - name: git submodule
-        run: git submodule update --init --recursive -- test/googletest
-      - name: depts
-        run: sudo apt-get install -y tar git gcc-c++ gcc make cmake python3 bzip2
-
-      - name: Cache Boost Dependency
-        id: cache-boost-dep
-        uses: actions/cache@v1
-        with:
-          path: boost_1_72_0
-          key: unix-boost-dep
-
-      - name: Get Boost Dependency
-        if: steps.cache-boost-dep.outputs.cache-hit != 'true'
-        run: |
-          curl -L -O https://dl.bintray.com/boostorg/release/1.72.0/source/boost_1_72_0.tar.bz2
-          tar xjf boost_1_72_0.tar.bz2
-
-      - name: Install Boost 
-        run: |
-          export BOOST_ROOT="$(pwd)/boost_1_72_0"
-          [ ! -d "$BOOST_ROOT" ] && echo "Error: no Boost root found at $BOOST_ROOT" && exit 1
-          cmake -B cmake_build -DBMI_C_LIB_ACTIVE:BOOL=OFF -S .
-
-      - name: Build nGen
-        run: cmake -B /ngen -S .
-      
-      - name: Build 2  
-        run: cmake --build /ngen --target ngen
-      
       - name: Build the NGEN image
         run: docker build . --file ./docker/CENTOS_NGEN_RUN.dockerfile --tag localbuild/ngen:latest      
-      
       - name: Run the NGEN model on example data
-        run: docker run --rm -i localbuild/ngen:latest
+        run: docker run --rm -i -v /home/runner/work/ngen/ngen/:/ngen/ localbuild/ngen:latest
         #Internal command has hardcoded paths to repo-local data      
         #When running command manually from container use below:
         #./ngen data/catchment_data.geojson "" data/nexus_data.geojson "" data/refactored_example_realization_config.json

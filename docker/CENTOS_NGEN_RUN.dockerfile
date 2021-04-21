@@ -4,7 +4,7 @@ RUN yum update -y
 RUN yum install -y tar git gcc-c++ gcc make cmake python3 bzip2
 
 #RUN git clone https://github.com/NOAA-OWP/ngen.git 
-COPY /home/runner/work/ngen/ngen /ngen/
+COPY ./* /ngen/
 
 WORKDIR ngen
 

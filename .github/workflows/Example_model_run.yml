@@ -22,7 +22,7 @@ jobs:
       - name: git submodule
         run: git submodule update --init --recursive -- test/googletest
       - name: depts
-        run: apt-get install -y tar git gcc-c++ gcc make cmake python3 bzip2
+        run: sudo apt-get install -y tar git gcc-c++ gcc make cmake python3 bzip2
 
       - name: Cache Boost Dependency
         id: cache-boost-dep

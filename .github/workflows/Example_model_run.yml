@@ -15,11 +15,14 @@ jobs:
       env:
         CXX: /usr/bin/g++
         BOOST_ROOT: boost_1_72_0
+
       steps:
       - name: Checkout the code
         uses: actions/checkout@v2
       - name: git submodule
         run: git submodule update --init --recursive -- test/googletest
+      - name: depts
+        run: apt-get install -y tar git gcc-c++ gcc make cmake python3 bzip2
 
       - name: Cache Boost Dependency
         id: cache-boost-dep

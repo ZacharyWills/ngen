@@ -6,25 +6,25 @@ RUN yum install -y tar git gcc-c++ gcc make cmake python3 bzip2
 #RUN git clone https://github.com/NOAA-OWP/ngen.git 
 COPY ./* /ngen/
 
-WORKDIR ngen
+#WORKDIR ngen
 
-RUN pwd && ls -l && git status
+#RUN pwd && ls -l && git status
 
-ENV CXX=/usr/bin/g++
+#ENV CXX=/usr/bin/g++
 
-RUN git submodule update --init --recursive -- test/googletest
+#RUN git submodule update --init --recursive -- test/googletest
 
-RUN curl -L -O https://dl.bintray.com/boostorg/release/1.72.0/source/boost_1_72_0.tar.bz2
+#RUN curl -L -O https://dl.bintray.com/boostorg/release/1.72.0/source/boost_1_72_0.tar.bz2
 
-RUN tar -xjf boost_1_72_0.tar.bz2
+#RUN tar -xjf boost_1_72_0.tar.bz2
 
-ENV BOOST_ROOT="boost_1_72_0"
+#ENV BOOST_ROOT="boost_1_72_0"
 
-WORKDIR /ngen
+#WORKDIR /ngen
 
-RUN cmake -B /ngen -S .
+#RUN cmake -B /ngen -S .
 
-RUN cmake --build /ngen --target ngen
+#RUN cmake --build /ngen --target ngen
 
 WORKDIR /ngen/
 

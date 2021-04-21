@@ -8,6 +8,8 @@ COPY ./* /ngen/
 
 WORKDIR ngen
 
+RUN pwd && ls -l && git status
+
 ENV CXX=/usr/bin/g++
 
 RUN git submodule update --init --recursive -- test/googletest

@@ -25,13 +25,19 @@ RUN tar -xjf boost_1_72_0.tar.bz2
 
 ENV BOOST_ROOT="boost_1_72_0"
 
+<<<<<<< HEAD
 WORKDIR /ngen
 
+=======
+>>>>>>> 1099b80e3113e24e26abb0a418bb60351d625130
 RUN cmake -B /ngen -S .
 
 RUN cmake --build /ngen --target ngen
 
+<<<<<<< HEAD
 WORKDIR /ngen/
 
+=======
+>>>>>>> 1099b80e3113e24e26abb0a418bb60351d625130
 # ----------- Run nGEn -----------
 CMD ./ngen data/catchment_data.geojson "" data/nexus_data.geojson "" data/example_realization_config.json

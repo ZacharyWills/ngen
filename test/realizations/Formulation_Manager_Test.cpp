@@ -2,6 +2,10 @@
 #include <Formulation_Manager.hpp>
 #include <Catchment_Formulation.hpp>
 
+#include <features/Features.hpp>
+#include <JSONGeometry.hpp>
+#include <JSONProperty.hpp>
+
 #include <iostream>
 #include <memory>
 
@@ -30,6 +34,40 @@ class Formulation_Manager_Test : public ::testing::Test {
     void TearDown() override {
 
     }
+
+    void add_feature(std::string id)
+    {
+      geojson::three_dimensional_coordinates three_dimensions {
+          {
+              {1.0, 2.0},
+              {3.0, 4.0},
+              {5.0, 6.0}
+          },
+          {
+              {7.0, 8.0},
+              {9.0, 10.0},
+              {11.0, 12.0}
+          }
+      };
+      std::vector<double> bounding_box{1.0, 2.0};
+      geojson::PropertyMap properties{
+          //{"prop_0", geojson::JSONProperty("prop_0", 0)},
+          //{"prop_1", geojson::JSONProperty("prop_1", "1")},
+          //{"prop_2", geojson::JSONProperty("prop_2", false)},
+          //{"prop_3", geojson::JSONProperty("prop_3", 2.0)}
+      };
+
+      geojson::Feature feature = std::make_shared<geojson::PolygonFeature>(geojson::PolygonFeature(
+        geojson::polygon(three_dimensions),
+        id,
+        properties
+        //bounding_box
+      ));
+
+      fabric->add_feature(feature);
+    }
+
+    geojson::GeoJSON fabric = std::make_shared<geojson::FeatureCollection>();
 
 };
 
@@ -97,7 +135,10 @@ const std::string EXAMPLE_1 = "{ "
                       "1.0 "
                   "], "
                   "\"storage\": 1.0, "
-                  "\"max_storage\": 1000.0, "
+                  "\"nash_max_storage\": 10.0, "
+                  "\"gw_storage\": 1.0, "
+                  "\"gw_max_storage\": 1.0, "
+                  "\"smax\": 1000.0, "
                   "\"a\": 1.0, "
                   "\"b\": 10.0, "
                   "\"Ks\": 0.1, "
@@ -213,14 +254,16 @@ const std::string EXAMPLE_2 = "{ "
           "{"
             "\"name\": \"simple_lumped\", "
             "\"params\": {"
-
                 "\"sr\": [ "
                     "1.0, "
                     "1.0, "
                     "1.0 "
                 "], "
                 "\"storage\": 1.0, "
-                "\"max_storage\": 1000.0, "
+                "\"nash_max_storage\": 10.0, "
+                "\"gw_storage\": 1.0, "
+                "\"gw_max_storage\": 1.0, "
+                "\"smax\": 1000.0, "
                 "\"a\": 1.0, "
                 "\"b\": 10.0, "
                 "\"Ks\": 0.1, "
@@ -338,14 +381,16 @@ const std::string EXAMPLE_3 = "{ "
             "{"
               "\"name\": \"simple_lumped\", "
               "\"params\": {"
-
                   "\"sr\": [ "
                       "1.0, "
                       "1.0, "
                       "1.0 "
                   "], "
                   "\"storage\": 1.0, "
-                  "\"max_storage\": 1000.0, "
+                  "\"nash_max_storage\": 10.0, "
+                  "\"gw_storage\": 1.0, "
+                  "\"gw_max_storage\": 1.0, "
+                  "\"smax\": 1000.0, "
                   "\"a\": 1.0, "
                   "\"b\": 10.0, "
                   "\"Ks\": 0.1, "
@@ -416,8 +461,10 @@ TEST_F(Formulation_Manager_Test, basic_reading_1) {
     realization::Formulation_Manager manager = realization::Formulation_Manager(stream);
 
     ASSERT_TRUE(manager.is_empty());
-    geojson::GeoJSON features = std::make_shared<geojson::FeatureCollection>();
-    manager.read(features, catchment_output);
+
+    this->add_feature("cat-52");
+    this->add_feature("cat-67");
+    manager.read(this->fabric, catchment_output);
 
     ASSERT_EQ(manager.get_size(), 2);
 
@@ -437,9 +484,9 @@ TEST_F(Formulation_Manager_Test, basic_reading_2) {
 
     ASSERT_TRUE(manager.is_empty());
 
-    geojson::GeoJSON features = std::make_shared<geojson::FeatureCollection>();
-
-    manager.read(features, catchment_output);
+    this->add_feature("cat-52");
+    this->add_feature("cat-67");
+    manager.read(this->fabric, catchment_output);
 
     ASSERT_EQ(manager.get_size(), 2);
 
@@ -457,8 +504,11 @@ TEST_F(Formulation_Manager_Test, basic_run_1) {
 
     realization::Formulation_Manager manager = realization::Formulation_Manager(stream);
 
-    geojson::GeoJSON features = std::make_shared<geojson::FeatureCollection>();
-    manager.read(features, catchment_output);
+    this->add_feature("cat-52");
+    this->add_feature("cat-67");
+    manager.read(this->fabric, catchment_output);
+
+    ASSERT_EQ(manager.get_size(), 2);
 
     std::map<std::string, std::map<long, double>> calculated_results;
 
@@ -499,8 +549,12 @@ TEST_F(Formulation_Manager_Test, basic_run_3) {
     utils::StreamHandler catchment_output(s_ptr);
 
     realization::Formulation_Manager manager = realization::Formulation_Manager(stream);
-    geojson::GeoJSON features = std::make_shared<geojson::FeatureCollection>();
-    manager.read(features, catchment_output);
+
+    this->add_feature("cat-67");
+    manager.read(this->fabric, catchment_output);
+
+    ASSERT_EQ(manager.get_size(), 1);
+    ASSERT_TRUE(manager.contains("cat-67"));
 
     std::vector<double> expected_results = {191.106140 / 1000.0, 177.198214 / 1000.0, 165.163302 / 1000.0};
 
@@ -520,4 +574,23 @@ TEST_F(Formulation_Manager_Test, basic_run_3) {
         double diff = actual > expected ? actual - expected : expected - actual;
         ASSERT_LE(diff, error_margin);
     }
+}
+
+TEST_F(Formulation_Manager_Test, read_extra) {
+    std::stringstream stream;
+    stream << EXAMPLE_1;
+
+    std::ostream* raw_pointer = &std::cout;
+    std::shared_ptr<std::ostream> s_ptr(raw_pointer, [](void*) {});
+    utils::StreamHandler catchment_output(s_ptr);
+
+    realization::Formulation_Manager manager = realization::Formulation_Manager(stream);
+
+    ASSERT_TRUE(manager.is_empty());
+    
+    this->add_feature("cat-67");
+    manager.read(this->fabric, catchment_output);
+
+    ASSERT_EQ(manager.get_size(), 1);
+    ASSERT_TRUE(manager.contains("cat-67"));
 }

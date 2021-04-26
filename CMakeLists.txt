@@ -72,6 +72,11 @@ if(MPI_ACTIVE)
     add_compile_definitions(NGEN_MPI_ACTIVE)
 endif()
 
+if(LSTM_TORCH_LIB_ACTIVE)
+   find_package(Torch REQUIRED)
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
+endif()
+
 find_package(Boost 1.72.0 REQUIRED)
 
 # Handle several steps for BMI C library logic and dependencies, at top level, if functionality is turned on
@@ -94,7 +99,6 @@ target_include_directories(ngen PUBLIC
 add_subdirectory("src/core")
 add_subdirectory("src/geojson")
 add_subdirectory("src/realizations/catchment")
-
 add_subdirectory("src/models/tshirt")
 add_subdirectory("src/models/kernels/reservoir")
 #add_subdirectory("src/forcing")
@@ -111,6 +115,15 @@ target_link_libraries(ngen PUBLIC
         #NGen::kernels_reservoir_timeless
         #NGen::forcing
         )
+
+if(LSTM_TORCH_LIB_ACTIVE)
+    add_compile_definitions(NGEN_LSTM_TORCH_LIB_ACTIVE)
+    add_subdirectory("src/models/lstm")
+    target_link_libraries(ngen PUBLIC
+            NGen::models_lstm
+            ${TORCH_LIBRARIES}
+           )
+endif()
 
 # For automated testing with Google Test
 if(PACKAGE_TESTS)

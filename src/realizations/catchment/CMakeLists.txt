@@ -25,3 +25,14 @@ target_link_libraries(realizations_catchment PUBLIC
         NGen::models_tshirt
         NGen::geojson
         )
+
+if(LSTM_TORCH_LIB_ACTIVE)
+   add_compile_definitions(NGEN_LSTM_TORCH_LIB_ACTIVE)
+
+   target_include_directories(realizations_catchment PUBLIC
+        ${PROJECT_SOURCE_DIR}/models/lstm/include
+        )
+   target_link_libraries(realizations_catchment PUBLIC
+        NGen::models_lstm
+        )
+endif()

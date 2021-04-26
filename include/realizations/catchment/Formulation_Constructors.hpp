@@ -14,6 +14,10 @@
 #include "Simple_Lumped_Model_Realization.hpp"
 #include "Bmi_C_Formulation.hpp"
 
+#ifdef NGEN_LSTM_TORCH_LIB_ACTIVE
+    #include "LSTM_Realization.hpp"
+#endif
+
 namespace realization {
     typedef std::shared_ptr<Formulation> (*constructor)(std::string, forcing_params, utils::StreamHandler);
 
@@ -31,6 +35,10 @@ namespace realization {
         {"tshirt", create_formulation_constructor<Tshirt_Realization>()},
         {"tshirt_c", create_formulation_constructor<Tshirt_C_Realization>()},
         {"simple_lumped", create_formulation_constructor<Simple_Lumped_Model_Realization>()}
+#ifdef NGEN_LSTM_TORCH_LIB_ACTIVE
+        ,
+        {"lstm", create_formulation_constructor<LSTM_Realization>()}
+#endif
     };
 
     static bool formulation_exists(std::string formulation_type) {

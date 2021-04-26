@@ -12,6 +12,10 @@ if(BMI_C_LIB_ACTIVE)
     add_compile_definitions(NGEN_BMI_C_LIB_TESTS_ACTIVE)
 endif()
 
+if(LSTM_TORCH_LIB_ACTIVE)
+    add_compile_definitions(LSTM_TORCH_LIB_TESTS_ACTIVE)
+endif()
+
 # Add test source files (e.g., test1.cpp)
 #add_executable(test_hymod models/hymod/include/HymodTest.cpp)
 #target_link_libraries(test_hymod gtest gtest_main)
@@ -87,7 +91,6 @@ add_automated_test(
         core/catchment/giuh/GIUH_Test.cpp
 )
 
-
 if(MPI_ACTIVE)
    add_automated_test(
            test_remote_nexus
@@ -107,6 +110,14 @@ add_automated_test(
         # TODO: this probably needs to be added to integration testing also
         realizations/catchments/Bmi_C_Cfe_IT.cpp
 )
+
+if(LSTM_TORCH_LIB_ACTIVE)
+   add_automated_test(
+           test_lstm
+           models/lstm/include/LSTM_Test.cpp
+           realizations/catchments/LSTM_Realization_Test.cpp
+   )
+endif()
 
 # Unit tests
 # TODO: Make sure the geojson tests don't need to be added here also

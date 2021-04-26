@@ -232,11 +232,13 @@ int main(int argc, char *argv[]) {
 
       for (std::pair<std::string, std::shared_ptr<realization::Formulation>> formulation_pair : manager ) {
         formulation_pair.second->set_et_params(pdm_et_data);
+       
         //get the catchment response
         double response = formulation_pair.second->get_response(output_time_index, 3600.0);
         //dump the output
         std::cout<<"\tCatchment "<<formulation_pair.first<<" contributing "<<response<<" m/s to "<<catchment_to_nexus[formulation_pair.first]<<std::endl;
-        // If the timestep is 0, also write the header line to the file
+
+      // If the timestep is 0, also write the header line to the file
         // TODO: add command line or config option to have this be omitted
         if (output_time_index == 0) {
             // Append "Time Step" to header string provided by formulation, since we'll also add time step to output
@@ -244,8 +246,11 @@ int main(int argc, char *argv[]) {
             catchment_outfiles[formulation_pair.first] << "Time Step," << "Time," << header_str <<std::endl;
         }
         std::string output_str = formulation_pair.second->get_output_line_for_timestep(output_time_index);
+
         catchment_outfiles[formulation_pair.first] << output_time_index << "," << current_timestamp << "," << output_str << std::endl;
+
         response = response * boost::geometry::area(nexus_collection->get_feature(formulation_pair.first)->geometry<geojson::multipolygon_t>());
+
         std::cout << "\t\tThe modified response is: " << response << std::endl;
         //update the nexus with this flow
         nexus_realizations[ catchment_to_nexus[formulation_pair.first] ]->add_upstream_flow(response, catchment_id[formulation_pair.first], output_time_index);
